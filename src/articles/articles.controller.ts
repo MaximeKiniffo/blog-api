@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Body,
+  Patch,
   Put,
   Delete,
   Query,
@@ -57,5 +58,11 @@ export class ArticlesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     return this.articlesService.remove(+id);
+  }
+
+  // PATCH /articles/:id/publish — publie un article
+  @Patch(':id/publish')
+  publish(@Param('id') id: string) {
+    return this.articlesService.publish(+id);
   }
 }

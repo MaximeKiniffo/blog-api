@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Article } from './article.entity';
@@ -26,12 +30,16 @@ export class ArticlesService {
   }
 
   // Recherche un article unique par son id, avec l'auteur en relation
-  // Retourne null si aucun article ne correspond (géré par TypeORM)
-  findOne(id: number): Promise<Article | null> {
-    return this.articleRepository.findOne({
+  // Lance une erreur si aucun article ne correspond
+  async findOne(id: number): Promise<Article> {
+    const article = await this.articleRepository.findOne({
       where: { id },
       relations: ['author'],
     });
+    if (!article) {
+      throw new NotFoundException(`Article #${id} not found`);
+    }
+    return article;
   }
 
   // Crée une nouvelle entrée en base
@@ -43,7 +51,7 @@ export class ArticlesService {
 
   // Met à jour les champs fournis pour l'article correspondant à l'id
   // .update() ne retourne pas l'entité mise à jour, donc on rappelle findOne pour la retourner
-  async update(id: number, data: UpdateArticleDto): Promise<Article | null> {
+  async update(id: number, data: UpdateArticleDto): Promise<Article> {
     await this.articleRepository.update(id, data);
     return this.findOne(id);
   }
@@ -51,6 +59,15 @@ export class ArticlesService {
   // Supprime définitivement l'article en base par son id
   // Retourne void car aucune donnée n'est à renvoyer après suppression
   async remove(id: number): Promise<void> {
+    await this.findOne(id);
     await this.articleRepository.delete(id);
+  }
+
+  async publish(id: number): Promise<Article> {
+    const article = await this.findOne(id);
+    if (article.published) {
+      throw new ConflictException('Article already published');
+    }
+    return this.update(id, { published: true });
   }
 }
