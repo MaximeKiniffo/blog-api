@@ -1,71 +1,56 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Article } from './article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
+import { UpdateArticleDto } from './dto/update-article.dto';
 
-export interface Article {
-  id: number;
-  title: string;
-  content: string;
-  published: boolean;
-}
-
+// @Injectable() permet à NestJS d'injecter ce service dans d'autres classes (controllers, etc.)
 @Injectable()
 export class ArticlesService {
-  private articles: Article[] = [
-    {
-      id: 1,
-      title: 'First article',
-      content: 'Content of the first article',
-      published: true,
-    },
-    {
-      id: 2,
-      title: 'Second article',
-      content: 'Content of the second article',
-      published: false,
-    },
-    {
-      id: 3,
-      title: 'Third article',
-      content: 'Content of the third article',
-      published: true,
-    },
-  ];
+  constructor(
+    // @InjectRepository injecte le repository TypeORM lié à l'entité Article
+    // Il sert d'interface entre le service et la base de données
+    @InjectRepository(Article)
+    private readonly articleRepository: Repository<Article>,
+  ) {}
 
-  private nextId = 4;
-
-  findAll() {
-    return this.articles;
+  // Récupère tous les articles avec leur auteur associé
+  // Si 'published' est fourni, filtre par statut ; sinon retourne tous les articles
+  // L'opérateur ternaire évite d'appliquer un filtre vide qui pourrait fausser la requête
+  findAll(published?: boolean): Promise<Article[]> {
+    return this.articleRepository.find({
+      relations: ['author'],
+      where: published !== undefined ? { published } : {},
+    });
   }
 
-  findOne(id: number): Article | undefined {
-    return this.articles.find((article) => article.id === id);
+  // Recherche un article unique par son id, avec l'auteur en relation
+  // Retourne null si aucun article ne correspond (géré par TypeORM)
+  findOne(id: number): Promise<Article | null> {
+    return this.articleRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
   }
 
-  create(article: CreateArticleDto): Article {
-    const newArticle = {
-      id: this.nextId++,
-      published: false,
-      ...article,
-    };
-    this.articles.push(newArticle);
-    return newArticle;
+  // Crée une nouvelle entrée en base
+  // .create() instancie l'entité à partir du DTO ; .save() l'insère en base et retourne l'objet persisté
+  create(data: CreateArticleDto): Promise<Article> {
+    const article = this.articleRepository.create(data);
+    return this.articleRepository.save(article);
   }
 
-  update(id: number, article: Partial<CreateArticleDto>): Article | undefined {
-    const index = this.articles.findIndex((article) => article.id === id);
-    if (index === -1) {
-      return undefined;
-    }
-    this.articles[index] = { ...this.articles[index], ...article };
-    return this.articles[index];
+  // Met à jour les champs fournis pour l'article correspondant à l'id
+  // .update() ne retourne pas l'entité mise à jour, donc on rappelle findOne pour la retourner
+  async update(id: number, data: UpdateArticleDto): Promise<Article | null> {
+    await this.articleRepository.update(id, data);
+    return this.findOne(id);
   }
 
-  remove(id: number): boolean {
-    const index = this.articles.findIndex((article) => article.id === id);
-    if (index === -1) {
-      return false;
-    }
-    this.articles.splice(index, 1);
-    return true;
+  // Supprime définitivement l'article en base par son id
+  // Retourne void car aucune donnée n'est à renvoyer après suppression
+  async remove(id: number): Promise<void> {
+    await this.articleRepository.delete(id);
   }
 }

@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -27,4 +28,8 @@ export class CreateArticleDto {
   @IsString({ each: true })
   @MinLength(2, { each: true })
   tags?: string[];
+
+  @IsInt()
+  @IsOptional()
+  author_id?: number;
 }
