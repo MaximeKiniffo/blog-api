@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthorsModule } from './authors/authors.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 //décorateur qui permet de définir les modules de l'application
 @Module({
@@ -20,6 +22,8 @@ import { AuthorsModule } from './authors/authors.module';
     }),
     ArticlesModule,
     AuthorsModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,10 +10,12 @@ import {
   Put,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 // Déclare ce contrôleur comme gestionnaire des routes préfixées par '/articles'
 @Controller('articles')
@@ -40,6 +42,7 @@ export class ArticlesController {
   // @HttpCode force le statut HTTP 201 (Created) au lieu du 200 par défaut
   // @Body extrait et valide le corps de la requête via le DTO
   @Post()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() body: CreateArticleDto) {
     return this.articlesService.create(body);
@@ -55,6 +58,7 @@ export class ArticlesController {
   // DELETE /articles/:id — supprime un article
   // @HttpCode 204 (No Content) : la suppression réussie ne retourne pas de corps
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     return this.articlesService.remove(+id);
@@ -62,6 +66,7 @@ export class ArticlesController {
 
   // PATCH /articles/:id/publish — publie un article
   @Patch(':id/publish')
+  @UseGuards(JwtAuthGuard)
   publish(@Param('id') id: string) {
     return this.articlesService.publish(+id);
   }

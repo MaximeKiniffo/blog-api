@@ -74,3 +74,14 @@ throw new ForbiddenException('message')
 throw new ConflictException('message')
 Filtre d'exception global
 typescriptapp.useGlobalFilters(new HttpExceptionFilter());
+
+// Protéger une route
+@UseGuards(JwtAuthGuard)
+
+// Récupérer l'utilisateur connecté
+@Req() req: any → req.user
+
+// Endpoints auth
+POST /auth/register  { email, password }
+POST /auth/login     { email, password }
+GET  /auth/me        (token requis)

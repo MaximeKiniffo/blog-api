@@ -137,3 +137,86 @@ throw new ConflictException('message')
 ```typescript
 app.useGlobalFilters(new HttpExceptionFilter());
 ```
+
+---
+
+## 🔐 Authentification JWT (Passport)
+
+### Installation
+```bash
+npm install @nestjs/passport @nestjs/jwt passport passport-jwt bcrypt
+npm install -D @types/passport-jwt @types/bcrypt
+```
+
+### JwtStrategy
+```typescript
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: process.env.JWT_SECRET || 'secret',
+    });
+  }
+
+  validate(payload: { sub: string; email: string }) {
+    return { id: payload.sub, email: payload.email };
+  }
+}
+```
+
+### JwtAuthGuard
+```typescript
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}
+```
+
+### AuthModule
+```typescript
+@Module({
+  imports: [
+    UsersModule,           // doit exporter UsersService
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'secret',
+      signOptions: { expiresIn: '24h' },
+    }),
+  ],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  controllers: [AuthController],
+})
+export class AuthModule {}
+```
+
+### Protéger une route
+```typescript
+@Post()
+@UseGuards(JwtAuthGuard)
+create(@Body() body: CreateArticleDto) { ... }
+```
+
+### Récupérer l'utilisateur connecté
+```typescript
+@Get('me')
+@UseGuards(JwtAuthGuard)
+me(@Req() req: { user: { id: number; email: string } }) {
+  return req.user;
+}
+```
+
+### AuthService — login / register
+```typescript
+// login : vérifie email + bcrypt, retourne access_token
+// register : crée l'user, retourne access_token
+const payload = { sub: user.id, email: user.email };
+return { access_token: this.jwtService.sign(payload) };
+```
+
+### Exporter un service depuis un module
+```typescript
+@Module({
+  providers: [UsersService],
+  exports: [UsersService],   // requis pour l'injection dans d'autres modules
+})
+```
