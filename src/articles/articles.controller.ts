@@ -11,6 +11,8 @@ import {
   Delete,
   Query,
   UseGuards,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -27,15 +29,19 @@ export class ArticlesController {
   // @Query récupère le paramètre 'published' depuis l'URL ; il est optionnel (?)
   // Si absent, tous les articles sont retournés ; sinon on filtre par statut de publication
   @Get()
-  findAll(@Query('published') published?: boolean) {
-    return this.articlesService.findAll(published);
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('published') published?: boolean,
+  ) {
+    return this.articlesService.findAll(page, limit, published);
   }
 
   // GET /articles/:id — récupère un article par son identifiant
   // @Param extrait ':id' depuis l'URL ; le '+' convertit la chaîne en nombre
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.articlesService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.articlesService.findOne(id);
   }
 
   // POST /articles — crée un nouvel article
@@ -51,8 +57,11 @@ export class ArticlesController {
   // PUT /articles/:id — met à jour un article existant (remplacement complet)
   // Combine @Param pour l'id et @Body pour les nouvelles données
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: UpdateArticleDto) {
-    return this.articlesService.update(+id, body);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateArticleDto,
+  ) {
+    return this.articlesService.update(id, body);
   }
 
   // DELETE /articles/:id — supprime un article
@@ -60,14 +69,14 @@ export class ArticlesController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    return this.articlesService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.articlesService.remove(id);
   }
 
   // PATCH /articles/:id/publish — publie un article
   @Patch(':id/publish')
   @UseGuards(JwtAuthGuard)
-  publish(@Param('id') id: string) {
-    return this.articlesService.publish(+id);
+  publish(@Param('id', ParseIntPipe) id: number) {
+    return this.articlesService.publish(id);
   }
 }

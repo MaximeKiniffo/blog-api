@@ -8,6 +8,7 @@ import {
   Body,
   Delete,
   Put,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
@@ -28,8 +29,8 @@ export class AuthorsController {
   // GET /authors/:id — retourne un auteur par son identifiant
   // Le '+' convertit l'id (string de l'URL) en number attendu par le service
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authorsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.authorsService.findOne(id);
   }
 
   // POST /authors — crée un nouvel auteur
@@ -44,15 +45,15 @@ export class AuthorsController {
   // 200 OK est explicitement forcé ici (c'est la valeur par défaut mais notée pour la clarté)
   @Put(':id')
   @HttpCode(HttpStatus.OK)
-  update(@Param('id') id: string, @Body() body: UpdateAuthorDto) {
-    return this.authorsService.update(+id, body);
+  update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateAuthorDto) {
+    return this.authorsService.update(id, body);
   }
 
   // DELETE /authors/:id — supprime un auteur
   // 204 No Content : la suppression ne retourne pas de corps de réponse
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    return this.authorsService.delete(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.authorsService.delete(id);
   }
 }
