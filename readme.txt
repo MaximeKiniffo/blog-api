@@ -79,7 +79,7 @@ typescriptapp.useGlobalFilters(new HttpExceptionFilter());
 @UseGuards(JwtAuthGuard)
 
 // Récupérer l'utilisateur connecté
-@Req() req: any → req.user
+@CurrentUser( → req.user
 
 // Endpoints auth
 POST /auth/register  { email, password }

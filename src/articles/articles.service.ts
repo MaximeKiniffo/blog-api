@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Article } from './article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { ArticleQueryDto } from './dto/article-query.dto';
 
 // @Injectable() permet à NestJS d'injecter ce service dans d'autres classes (controllers, etc.)
 @Injectable()
@@ -22,17 +23,17 @@ export class ArticlesService {
   // Récupère tous les articles avec leur auteur associé
   // Si 'published' est fourni, filtre par statut ; sinon retourne tous les articles
   // L'opérateur ternaire évite d'appliquer un filtre vide qui pourrait fausser la requête
-  findAll(
-    page: number = 1,
-    limit: number = 10,
-    published?: boolean,
-  ): Promise<Article[]> {
-    return this.articleRepository.find({
-      relations: ['author'],
-      where: published !== undefined ? { published } : {},
+  async findAll(query: ArticleQueryDto) {
+    const { page = 1, limit = 10, published } = query;
+    const [items, total] = await this.articleRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
+      relations: ['author'],
+      order: { createdAt: 'DESC' },
+      ...(published !== undefined && { where: { published } }),
     });
+
+    return items;
   }
 
   // Recherche un article unique par son id, avec l'auteur en relation

@@ -42,7 +42,10 @@ export class Article {
 
   // Relation Many-to-One : plusieurs articles peuvent appartenir au même auteur
   // @JoinColumn définit la colonne de clé étrangère utilisée pour la jointure
-  @ManyToOne(() => Author, (author) => author.articles)
+  @ManyToOne(() => Author, (author) => author.articles, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
   @JoinColumn({ name: 'author_id' })
   author: Author;
 

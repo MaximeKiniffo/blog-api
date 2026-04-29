@@ -12,9 +12,9 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
-  DefaultValuePipe,
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
+import { ArticleQueryDto } from './dto/article-query.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -29,12 +29,8 @@ export class ArticlesController {
   // @Query récupère le paramètre 'published' depuis l'URL ; il est optionnel (?)
   // Si absent, tous les articles sont retournés ; sinon on filtre par statut de publication
   @Get()
-  findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('published') published?: boolean,
-  ) {
-    return this.articlesService.findAll(page, limit, published);
+  findAll(@Query() query: ArticleQueryDto) {
+    return this.articlesService.findAll(query);
   }
 
   // GET /articles/:id — récupère un article par son identifiant
